@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Pagmenos Design Tokens
+   ============================================================ */
+@theme {
+  --color-brand-50: #EAF8F1;
+  --color-brand-100: #D5F0E2;
+  --color-brand-200: #A8E1C3;
+  --color-brand-300: #6FCC9D;
+  --color-brand-400: #3DB87A;
+  --color-brand-500: #1FA36B;
+  --color-brand-600: #17875A;
+  --color-brand-700: #116149;
+  --color-brand-800: #0C4435;
+  --color-brand-900: #072A21;
+
+  --color-background: #F7F8F8;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F0F2F1;
+
+  --color-text: #17211D;
+  --color-text-secondary: #68746E;
+  --color-text-muted: #9BA5A0;
+
+  --color-border: #E4E8E6;
+  --color-border-hover: #CBD2CE;
+
+  --color-danger: #D84646;
+  --color-danger-light: #FEF2F2;
+  --color-warning: #D98B20;
+  --color-warning-light: #FFFBEB;
+  --color-success: #17875A;
+  --color-success-light: #ECFDF5;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background-color: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+/* Safe area padding for mobile */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Price styling */
+.price-old {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+}
+
+/* Skeleton animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--color-border) 25%, var(--color-surface-hover) 50%, var(--color-border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Touch targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}

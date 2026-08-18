@@ -1,0 +1,19 @@
+{
+  "name": "pagmenos",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Pagmenos — Pharmacy PWA with WhatsApp checkout",
+  "scripts": {
+    "dev:store": "pnpm -F @pagmenos/store dev",
+    "dev:admin": "pnpm -F @pagmenos/admin dev",
+    "dev": "pnpm -F @pagmenos/store dev",
+    "build": "pnpm -r build",
+    "build:store": "pnpm -F @pagmenos/store build",
+    "build:admin": "pnpm -F @pagmenos/admin build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "clean": "pnpm -r exec rm -rf dist node_modules .wrangler"
+  },
+  "engines": { "node": ">=20", "pnpm": ">=9" }
+}
