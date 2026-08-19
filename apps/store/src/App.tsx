@@ -21,6 +21,15 @@ const PrivacyPage = lazy(() => import('@/pages/PrivacyPage'));
 const TermsPage = lazy(() => import('@/pages/TermsPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 
+// Admin routes
+const AdminGuard = lazy(() => import('@/components/admin/AdminGuard'));
+const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
+const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage'));
+const AdminProductsPage = lazy(() => import('@/pages/admin/ProductsPage'));
+const AdminPromotionsPage = lazy(() => import('@/pages/admin/PromotionsPage'));
+const AdminCategoriesPage = lazy(() => import('@/pages/admin/CategoriesPage'));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/SettingsPage'));
+
 function PageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -64,6 +73,17 @@ export default function App() {
           <Route path="privacidade" element={<PrivacyPage />} />
           <Route path="termos" element={<TermsPage />} />
           <Route path="*" element={<NotFoundPage />} />
+        </Route>
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminGuard />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="produtos" element={<AdminProductsPage />} />
+            <Route path="ofertas" element={<AdminPromotionsPage />} />
+            <Route path="categorias" element={<AdminCategoriesPage />} />
+            <Route path="configuracoes" element={<AdminSettingsPage />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>

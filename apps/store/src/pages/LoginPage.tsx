@@ -15,9 +15,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const searchParams = new URLSearchParams(location.search);
+  const redirectParam = searchParams.get('redirect');
+
   // Already logged in — redirect
   if (user) {
-    const from = (location.state as any)?.from?.pathname || '/conta';
+    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
+    const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
     return <Navigate to={from} replace />;
   }
 
@@ -40,7 +44,8 @@ export default function LoginPage() {
     }
 
     toast.success('Login realizado com sucesso!');
-    const from = (location.state as any)?.from?.pathname || '/conta';
+    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
+    const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
     navigate(from, { replace: true });
   };
 
@@ -54,7 +59,8 @@ export default function LoginPage() {
   const handleDemoLogin = () => {
     loginAsDemo();
     toast.success('Logado como Cliente Demo');
-    const from = (location.state as any)?.from?.pathname || '/conta';
+    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
+    const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
     navigate(from, { replace: true });
   };
 

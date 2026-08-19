@@ -13,6 +13,7 @@ export interface DemoUser {
 
 interface AuthState {
   user: (User & { name?: string | null }) | DemoUser | null;
+  role: 'admin' | 'customer' | null;
   session: Session | null;
   loading: boolean;
   initialized: boolean;
@@ -27,6 +28,7 @@ interface AuthState {
 
 export const useStoreAuth = create<AuthState>()((set) => ({
   user: null,
+  role: null,
   session: null,
   loading: true,
   initialized: false,
@@ -51,27 +53,39 @@ export const useStoreAuth = create<AuthState>()((set) => ({
       const { data: { session } } = await supabase.auth.getSession();
       
       let profileName: string | null = null;
+      let role: 'admin' | 'customer' | null = null;
       if (session?.user) {
-        const { data } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
-        profileName = data?.full_name || session.user.email || null;
+        const [profileRes, roleRes] = await Promise.all([
+          supabase.from('profiles').select('full_name').eq('id', session.user.id).single(),
+          supabase.from('user_roles').select('role').eq('user_id', session.user.id).single()
+        ]);
+        profileName = profileRes.data?.full_name || session.user.email || null;
+        role = roleRes.data?.role || 'customer';
       }
 
       set({ 
         session, 
         user: session?.user ? { ...session.user, name: profileName } as any : null, 
+        role,
         loading: false, 
         initialized: true 
       });
 
       supabase.auth.onAuthStateChange(async (_event, newSession) => {
         let newName: string | null = null;
+        let newRole: 'admin' | 'customer' | null = null;
         if (newSession?.user) {
-          const { data } = await supabase.from('profiles').select('full_name').eq('id', newSession.user.id).single();
-          newName = data?.full_name || newSession.user.email || null;
+          const [profileRes, roleRes] = await Promise.all([
+            supabase.from('profiles').select('full_name').eq('id', newSession.user.id).single(),
+            supabase.from('user_roles').select('role').eq('user_id', newSession.user.id).single()
+          ]);
+          newName = profileRes.data?.full_name || newSession.user.email || null;
+          newRole = roleRes.data?.role || 'customer';
         }
         set({ 
           session: newSession, 
           user: newSession?.user ? { ...newSession.user, name: newName } as any : null, 
+          role: newRole,
           loading: false 
         });
       });
@@ -141,7 +155,7 @@ export const useStoreAuth = create<AuthState>()((set) => ({
     if (!isDemoAllowed) return;
     const demo = { id: 'demo-client', name: 'Cliente Demo', email: 'cliente@demo.com' };
     localStorage.setItem('demo_user', JSON.stringify(demo));
-    set({ user: demo, isDemoMode: true });
+    set({ user: demo, role: 'customer', isDemoMode: true });
   },
 
   logout: async () => {
@@ -151,6 +165,6 @@ export const useStoreAuth = create<AuthState>()((set) => ({
       return;
     }
     await supabase.auth.signOut();
-    set({ session: null, user: null });
+    set({ session: null, user: null, role: null });
   },
 }));

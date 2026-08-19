@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useStoreAuth } from '@/stores/auth';
-import { User, LogOut, Package } from 'lucide-react';
+import { User, LogOut, Package, Shield } from 'lucide-react';
 
 export default function AccountPage() {
-  const { user, logout } = useStoreAuth();
+  const { user, role, logout } = useStoreAuth();
   const navigate = useNavigate();
 
   if (!user) {
@@ -53,6 +53,19 @@ export default function AccountPage() {
         </div>
         <svg className="w-5 h-5 text-text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
       </Link>
+
+      {role === 'admin' && (
+        <Link to="/admin" className="flex items-center gap-4 bg-surface border border-border rounded-2xl p-5 hover:border-brand-500 transition-colors group">
+          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
+            <Shield size={24} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-base font-bold text-text">Painel administrativo</h2>
+            <p className="text-sm text-text-secondary">Gerencie produtos e categorias</p>
+          </div>
+          <svg className="w-5 h-5 text-text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        </Link>
+      )}
 
       {/* Logout */}
       <button onClick={handleLogout} className="flex items-center justify-center gap-2 w-full bg-danger-light text-danger font-semibold rounded-xl py-3.5 hover:bg-danger/20 transition-colors text-sm">
