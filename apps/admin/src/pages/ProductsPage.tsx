@@ -5,7 +5,7 @@ import { compressProductImage, type CompressionResult } from '@/lib/imageCompres
 import { formatBRL } from '@pagmenos/utils';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, Pencil, ImageUp, X, Check, Search, DollarSign } from 'lucide-react';
+import { Plus, Pencil, ImageUp, Camera, X, Check, Search, DollarSign } from 'lucide-react';
 
 type ProductForm = {
   name: string; slug: string; category_id: string; description: string; brand: string;
@@ -32,8 +32,10 @@ export default function ProductsPage() {
   const [compression, setCompression] = useState<CompressionResult | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [imageProcessing, setImageProcessing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
     if (!products) return [];
@@ -60,6 +62,7 @@ export default function ProductsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
+      setImageProcessing(true);
       setImageFile(file);
       const result = await compressProductImage(file);
       setCompression(result);
@@ -67,6 +70,10 @@ export default function ProductsPage() {
       setPreviewUrl(url);
       toast.success(`Imagem comprimida: ${formatBytes(result.originalSize)} → ${formatBytes(result.compressedSize)} (${result.savings}% economia)`);
     } catch (err: any) { toast.error(err.message || 'Erro ao processar imagem'); }
+    setImageProcessing(false);
+    // Reset inputs so same file can be re-selected
+    if (fileRef.current) fileRef.current.value = '';
+    if (cameraRef.current) cameraRef.current.value = '';
   };
 
   const handlePriceChange = (v: string) => { setPriceInput(v); const cents = Math.round(parseFloat(v.replace(',', '.')) * 100); if (!isNaN(cents)) setForm((f) => ({ ...f, base_price_cents: cents })); };
@@ -123,13 +130,28 @@ export default function ProductsPage() {
 
       // Upload image if selected
       if (compression && productId) {
+        // Get old image URL for cleanup
+        let oldImageUrl: string | null = null;
+        if (editing !== 'new') {
+          const { data: oldProduct } = await supabase.from('products').select('image_url').eq('id', productId).single();
+          oldImageUrl = oldProduct?.image_url || null;
+        }
+
         const ext = compression.format === 'webp' ? 'webp' : 'jpeg';
         const path = `products/${productId}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadErr } = await supabase.storage.from('product-images').upload(path, compression.blob, { contentType: `image/${ext}`, upsert: false });
         if (uploadErr) throw uploadErr;
-        // Save image record
+        
         const { data: publicUrlData } = supabase.storage.from('product-images').getPublicUrl(path);
         await supabase.from('products').update({ image_url: publicUrlData.publicUrl }).eq('id', productId);
+
+        // Clean up old Storage object (only if it was in our bucket)
+        if (oldImageUrl && oldImageUrl.includes('/product-images/')) {
+          try {
+            const oldPath = oldImageUrl.split('/product-images/')[1];
+            if (oldPath) await supabase.storage.from('product-images').remove([oldPath]);
+          } catch { /* non-critical */ }
+        }
       }
 
       toast.success(editing === 'new' ? 'Produto criado!' : 'Produto atualizado!');
@@ -211,10 +233,16 @@ export default function ProductsPage() {
             {/* Image upload */}
             <div>
               <label className="block text-sm font-medium text-text-secondary mb-2">Foto do produto</label>
+              <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
               <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageSelect} className="hidden" />
-              {previewUrl ? (
+              {imageProcessing ? (
+                <div className="w-full max-w-sm flex flex-col items-center justify-center gap-2 border-2 border-dashed border-brand-500 rounded-xl p-8 bg-brand-50/30">
+                  <div className="w-6 h-6 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+                  <span className="text-sm text-brand-600 font-medium">Processando imagem...</span>
+                </div>
+              ) : previewUrl ? (
                 <div className="space-y-3">
-                  <img src={previewUrl} alt="Preview" className="w-full max-w-sm rounded-xl border border-border" />
+                  <img src={previewUrl} alt="Prévia da imagem do produto" className="w-full max-w-sm rounded-xl border border-border" />
                   {compression && (
                     <div className="bg-success-light border border-success/20 rounded-xl p-3 text-sm">
                       <p className="font-medium text-success">Imagem otimizada</p>
@@ -222,15 +250,24 @@ export default function ProductsPage() {
                       <p className="text-text-secondary">Economia: {compression.savings}% · {compression.width}×{compression.height}px · {compression.format.toUpperCase()}</p>
                     </div>
                   )}
-                  <button onClick={() => { clearImage(); fileRef.current?.click(); }} className="text-sm text-brand-600 font-medium">Trocar foto</button>
+                  <div className="flex gap-3">
+                    <button onClick={() => { clearImage(); cameraRef.current?.click(); }} className="text-sm text-brand-600 font-medium">Tirar outra foto</button>
+                    <button onClick={() => { clearImage(); fileRef.current?.click(); }} className="text-sm text-text-secondary font-medium">Escolher da galeria</button>
+                  </div>
                 </div>
               ) : (
-                <button onClick={() => fileRef.current?.click()} className="w-full max-w-sm flex flex-col items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-8 hover:border-brand-500 hover:bg-brand-50/30 transition-colors">
-                  <ImageUp size={32} className="text-text-muted" />
-                  <span className="text-sm text-text-secondary">Clique para selecionar imagem</span>
-                  <span className="text-xs text-text-muted">JPEG, PNG ou WebP · Comprimida automaticamente</span>
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 max-w-sm">
+                  <button onClick={() => cameraRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 hover:border-brand-500 hover:bg-brand-50/30 transition-colors">
+                    <Camera size={22} className="text-text-muted" />
+                    <span className="text-sm text-text-secondary font-medium">Tirar foto</span>
+                  </button>
+                  <button onClick={() => fileRef.current?.click()} className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border rounded-xl p-5 hover:border-brand-500 hover:bg-brand-50/30 transition-colors">
+                    <ImageUp size={22} className="text-text-muted" />
+                    <span className="text-sm text-text-secondary font-medium">Escolher imagem</span>
+                  </button>
+                </div>
               )}
+              <p className="text-xs text-text-muted mt-2">JPEG, PNG ou WebP · Comprimida automaticamente</p>
             </div>
           </div>
         </div>

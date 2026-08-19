@@ -51,7 +51,24 @@ export default function HistoryPage() {
       </div>
 
       {loading ? (
-        <div className="p-8 text-center text-text-secondary">Carregando...</div>
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-surface border border-border rounded-2xl p-5 shadow-sm animate-pulse">
+              <div className="flex items-center justify-between mb-3 pb-3 border-b border-border border-dashed">
+                <div className="h-4 bg-border rounded w-24"></div>
+                <div className="h-5 bg-border rounded w-16"></div>
+              </div>
+              <div className="space-y-2 mb-4">
+                <div className="h-4 bg-border rounded w-3/4"></div>
+                <div className="h-4 bg-border rounded w-1/2"></div>
+              </div>
+              <div className="flex justify-between items-end">
+                <div className="h-3 bg-border rounded w-16"></div>
+                <div className="h-6 bg-border rounded w-20"></div>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : history.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 bg-surface border border-border rounded-full flex items-center justify-center mx-auto mb-4 text-text-muted">

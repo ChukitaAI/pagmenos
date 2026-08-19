@@ -60,7 +60,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   loginAsDemo: () => {
     set({
       user: { id: 'admin-demo', email: 'admin@demo.com' } as User,
-      role: 'owner',
+      role: 'admin',
       isDemoMode: true,
       initialized: true,
       loading: false,

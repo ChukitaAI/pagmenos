@@ -1,14 +1,46 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
+import { useStoreAuth } from '@/stores/auth';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { user, register } = useStoreAuth();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = (e: React.FormEvent) => {
+  // Already logged in — redirect
+  if (user) {
+    return <Navigate to="/conta" replace />;
+  }
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.error('Neste momento o cadastro está em desenvolvimento. Use o Modo Demo no Login.');
-    navigate('/login');
+    if (!name || !email || !password) { toast.error('Preencha todos os campos.'); return; }
+    if (password.length < 6) { toast.error('A senha deve ter pelo menos 6 caracteres.'); return; }
+
+    if (!hasSupabaseConfig) {
+      toast.error('Cadastro disponível apenas quando o Supabase estiver configurado. Use o Modo Demo no Login.');
+      navigate('/login');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await register(name, email, password);
+    setLoading(false);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    toast.success('Conta criada com sucesso!');
+    navigate('/conta', { replace: true });
   };
 
   return (
@@ -18,21 +50,43 @@ export default function RegisterPage() {
       </button>
 
       <h1 className="text-2xl font-bold text-text mb-2">Criar conta</h1>
-      <p className="text-text-secondary text-sm mb-8">Cadastre-se para aproveitar ofertas exclusivas.</p>
+      <p className="text-text-secondary text-sm mb-8">Cadastre-se para acompanhar seus pedidos.</p>
 
       <form onSubmit={handleRegister} className="space-y-4">
         <div>
-          <input type="text" placeholder="Nome completo" className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface" />
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome completo"
+            required
+            className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface"
+          />
         </div>
         <div>
-          <input type="email" placeholder="E-mail" className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface" />
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-mail"
+            required
+            className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface"
+          />
         </div>
         <div>
-          <input type="password" placeholder="Senha" className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface" />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Senha"
+            required
+            minLength={6}
+            className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface"
+          />
         </div>
 
-        <button type="submit" className="w-full bg-brand-500 text-white font-semibold rounded-xl py-3.5 hover:bg-brand-600 transition-colors">
-          Cadastrar
+        <button type="submit" disabled={loading} className="w-full bg-brand-500 text-white font-semibold rounded-xl py-3.5 hover:bg-brand-600 transition-colors disabled:opacity-60">
+          {loading ? 'Criando conta...' : 'Cadastrar'}
         </button>
       </form>
 

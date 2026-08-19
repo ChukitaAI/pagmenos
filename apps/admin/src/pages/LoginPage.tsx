@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,20 +29,11 @@ export default function LoginPage() {
     
     if (!roleData || roleData.role !== 'admin') {
       await supabase.auth.signOut();
-      toast.error('Acesso negado. Esta conta não possui privilégios administrativos.');
+      toast.error('Você não possui permissão para acessar o painel administrativo.');
       setLoading(false);
       return;
     }
 
-    // Check MFA status
-    const { data: factors } = await supabase.auth.mfa.listFactors();
-    const hasVerifiedFactor = factors?.totp?.some(f => f.status === 'verified');
-    
-    // We navigate to verify or setup, but for now we skip MFA enforcement in this prompt's initial setup to avoid locking out.
-    // In a real scenario, we'd navigate to /mfa/verify or /mfa/setup based on `hasVerifiedFactor`.
-    // For simplicity in this comprehensive test build, we'll navigate directly to dashboard.
-    // The AAL2 policies in the database will enforce MFA if enabled there.
-    
     const from = (location.state as any)?.from?.pathname || '/';
     navigate(from, { replace: true });
   };
@@ -63,18 +56,18 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">E-mail</label>
-            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface" />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1">Senha</label>
-            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface" />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-brand-500 text-white py-3.5 rounded-xl font-semibold hover:bg-brand-600 transition-colors disabled:opacity-60">
             {loading ? 'Autenticando...' : 'Entrar'}
           </button>
         </form>
 
-        {(import.meta.env.DEV || !(Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY))) && (
+        {!hasSupabaseConfig && (
           <div className="mt-10 pt-8 border-t border-border">
             <div className="text-center relative">
               <span className="bg-surface px-3 text-xs font-semibold text-text-muted uppercase tracking-wider absolute -top-3 left-1/2 -translate-x-1/2">

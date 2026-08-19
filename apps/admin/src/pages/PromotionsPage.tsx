@@ -35,7 +35,7 @@ export default function PromotionsPage() {
   }});
   const { data: products } = useQuery({ queryKey: ['admin-products'], queryFn: async () => {
     if (!hasSupabaseConfig) return (await import('@pagmenos/utils')).mockDB.get().products.filter(p => p.active);
-    const { data, error } = await supabase.from('products').select('id, name, base_price_cents').eq('active', true).order('name');
+    const { data, error } = await supabase.from('products').select('id, name, price_cents').eq('active', true).order('name');
     if (error) throw error; return data || [];
   }});
 
@@ -147,7 +147,7 @@ export default function PromotionsPage() {
                 <label key={p.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-background cursor-pointer">
                   <input type="checkbox" checked={form.productIds.includes(p.id)} onChange={() => toggleProduct(p.id)} />
                   <span className="text-sm text-text">{p.name}</span>
-                  <span className="text-xs text-text-muted ml-auto">{formatBRL(p.base_price_cents)}</span>
+                  <span className="text-xs text-text-muted ml-auto">{formatBRL(p.price_cents)}</span>
                 </label>
               ))}
             </div>

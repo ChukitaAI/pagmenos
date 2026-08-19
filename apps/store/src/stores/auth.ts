@@ -17,6 +17,9 @@ interface AuthState {
   initialized: boolean;
   isDemoMode: boolean;
   initialize: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: string | null }>;
+  register: (name: string, email: string, password: string) => Promise<{ error: string | null }>;
+  resetPassword: (email: string) => Promise<{ error: string | null }>;
   loginAsDemo: () => void;
   logout: () => Promise<void>;
 }
@@ -42,10 +45,10 @@ export const useStoreAuth = create<AuthState>()((set) => ({
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
-      let profileName = null;
+      let profileName: string | null = null;
       if (session?.user) {
         const { data } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
-        profileName = data?.full_name || session.user.email;
+        profileName = data?.full_name || session.user.email || null;
       }
 
       set({ 
@@ -56,10 +59,10 @@ export const useStoreAuth = create<AuthState>()((set) => ({
       });
 
       supabase.auth.onAuthStateChange(async (_event, newSession) => {
-        let newName = null;
+        let newName: string | null = null;
         if (newSession?.user) {
           const { data } = await supabase.from('profiles').select('full_name').eq('id', newSession.user.id).single();
-          newName = data?.full_name || newSession.user.email;
+          newName = data?.full_name || newSession.user.email || null;
         }
         set({ 
           session: newSession, 
@@ -69,6 +72,63 @@ export const useStoreAuth = create<AuthState>()((set) => ({
       });
     } catch (e) {
       set({ loading: false, initialized: true });
+    }
+  },
+
+  login: async (email: string, password: string) => {
+    if (!hasSupabaseConfig) {
+      return { error: 'Supabase não configurado.' };
+    }
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message === 'Invalid login credentials') {
+          return { error: 'E-mail ou senha inválidos.' };
+        }
+        return { error: 'Não foi possível entrar. Tente novamente.' };
+      }
+      return { error: null };
+    } catch {
+      return { error: 'Não foi possível entrar. Tente novamente.' };
+    }
+  },
+
+  register: async (name: string, email: string, password: string) => {
+    if (!hasSupabaseConfig) {
+      return { error: 'Supabase não configurado.' };
+    }
+    try {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name },
+        },
+      });
+      if (error) {
+        if (error.message.includes('already registered')) {
+          return { error: 'Este e-mail já está cadastrado.' };
+        }
+        return { error: 'Não foi possível criar sua conta. Tente novamente.' };
+      }
+      return { error: null };
+    } catch {
+      return { error: 'Não foi possível criar sua conta. Tente novamente.' };
+    }
+  },
+
+  resetPassword: async (email: string) => {
+    if (!hasSupabaseConfig) {
+      return { error: 'Supabase não configurado.' };
+    }
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) {
+        return { error: 'Não foi possível enviar o e-mail de recuperação.' };
+      }
+      return { error: null };
+    } catch {
+      return { error: 'Não foi possível enviar o e-mail de recuperação.' };
     }
   },
 

@@ -1,32 +1,59 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, Navigate } from 'react-router-dom';
 import { useStoreAuth } from '@/stores/auth';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { loginAsDemo, isDemoMode } = useStoreAuth();
+  const { user, login, loginAsDemo, resetPassword } = useStoreAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
-  // Is this DEV env?
-  const isDev = import.meta.env.DEV;
-  // Does it have Supabase configured?
-  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
-  
-  const showDemoLogin = isDev || !hasSupabaseConfig;
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  // Already logged in — redirect
+  if (user) {
+    const from = (location.state as any)?.from?.pathname || '/conta';
+    return <Navigate to={from} replace />;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.error('Neste momento o login está em desenvolvimento. Use o Modo Demo.');
+    if (!email || !password) { toast.error('Preencha e-mail e senha.'); return; }
+
+    if (!hasSupabaseConfig) {
+      toast.error('Login disponível apenas em modo de demonstração.');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await login(email, password);
+    setLoading(false);
+
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    toast.success('Login realizado com sucesso!');
+    const from = (location.state as any)?.from?.pathname || '/conta';
+    navigate(from, { replace: true });
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) { toast.error('Preencha o campo de e-mail para recuperar a senha.'); return; }
+    const { error } = await resetPassword(email);
+    if (error) { toast.error(error); return; }
+    toast.success('E-mail de recuperação enviado. Verifique sua caixa de entrada.');
   };
 
   const handleDemoLogin = () => {
     loginAsDemo();
     toast.success('Logado como Cliente Demo');
-    const from = location.state?.from?.pathname || '/conta';
+    const from = (location.state as any)?.from?.pathname || '/conta';
     navigate(from, { replace: true });
   };
 
@@ -46,6 +73,7 @@ export default function LoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="E-mail"
+            required
             className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface"
           />
         </div>
@@ -55,16 +83,17 @@ export default function LoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Senha"
+            required
             className="w-full border border-border rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 bg-surface"
           />
         </div>
         
         <div className="flex justify-end">
-          <Link to="#" className="text-sm text-brand-600 font-medium">Esqueceu a senha?</Link>
+          <button type="button" onClick={handleForgotPassword} className="text-sm text-brand-600 font-medium hover:underline">Esqueceu a senha?</button>
         </div>
 
-        <button type="submit" className="w-full bg-brand-500 text-white font-semibold rounded-xl py-3.5 hover:bg-brand-600 transition-colors">
-          Entrar
+        <button type="submit" disabled={loading} className="w-full bg-brand-500 text-white font-semibold rounded-xl py-3.5 hover:bg-brand-600 transition-colors disabled:opacity-60">
+          {loading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
 
@@ -72,7 +101,7 @@ export default function LoginPage() {
         Não tem uma conta? <Link to="/cadastro" className="text-brand-600 font-medium">Cadastre-se</Link>
       </div>
 
-      {showDemoLogin && (
+      {!hasSupabaseConfig && (
         <div className="mt-12 pt-8 border-t border-border">
           <div className="text-center relative">
             <span className="bg-background px-3 text-xs font-semibold text-text-muted uppercase tracking-wider absolute -top-3 left-1/2 -translate-x-1/2">
