@@ -4,7 +4,8 @@ import { useStoreAuth } from '@/stores/auth';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
+const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -24,8 +25,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (!email || !password) { toast.error('Preencha e-mail e senha.'); return; }
 
-    if (!hasSupabaseConfig) {
-      toast.error('Login disponível apenas em modo de demonstração.');
+    if (!hasSupabaseConfig && isDemoAllowed) {
+      toast.error('Login disponível apenas em modo de demonstração no ambiente local sem Supabase.');
       return;
     }
 
@@ -101,7 +102,7 @@ export default function LoginPage() {
         Não tem uma conta? <Link to="/cadastro" className="text-brand-600 font-medium">Cadastre-se</Link>
       </div>
 
-      {!hasSupabaseConfig && (
+      {isDemoAllowed && (
         <div className="mt-12 pt-8 border-t border-border">
           <div className="text-center relative">
             <span className="bg-background px-3 text-xs font-semibold text-text-muted uppercase tracking-wider absolute -top-3 left-1/2 -translate-x-1/2">

@@ -14,7 +14,8 @@ interface AuthState {
   loginAsDemo: () => void;
 }
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
+const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 
 export const useAuthStore = create<AuthState>()((set) => ({
   user: null,
@@ -25,10 +26,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   isDemoMode: false,
 
   initialize: async () => {
-    if (!hasSupabaseConfig && import.meta.env.DEV) {
-      // In demo mode without supabase, we might already be "logged in" via a local flag
-      // But we keep it simple: require them to click "demo login" each time they refresh for now,
-      // or we can just auto-initialize to demo mode if DEV
+    if (!hasSupabaseConfig) {
       set({ loading: false, initialized: true });
       return;
     }
@@ -58,6 +56,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   },
 
   loginAsDemo: () => {
+    if (!isDemoAllowed) return;
     set({
       user: { id: 'admin-demo', email: 'admin@demo.com' } as User,
       role: 'admin',

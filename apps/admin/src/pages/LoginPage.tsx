@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
+const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -15,6 +16,16 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    if (!hasSupabaseConfig) {
+      if (isDemoAllowed) {
+        toast.error('Login disponível apenas em modo de demonstração no ambiente local sem Supabase.');
+      } else {
+        toast.error('Não foi possível conectar ao serviço de autenticação.');
+      }
+      setLoading(false);
+      return;
+    }
     
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     
@@ -67,7 +78,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {!hasSupabaseConfig && (
+        {isDemoAllowed && (
           <div className="mt-10 pt-8 border-t border-border">
             <div className="text-center relative">
               <span className="bg-surface px-3 text-xs font-semibold text-text-muted uppercase tracking-wider absolute -top-3 left-1/2 -translate-x-1/2">

@@ -2,7 +2,8 @@ import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
 import type { Session, User } from '@supabase/supabase-js';
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
+const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 
 export interface DemoUser {
   id: string;
@@ -33,9 +34,13 @@ export const useStoreAuth = create<AuthState>()((set) => ({
 
   initialize: async () => {
     if (!hasSupabaseConfig) {
-      const demo = localStorage.getItem('demo_user');
-      if (demo) {
-        set({ user: JSON.parse(demo), isDemoMode: true, loading: false, initialized: true });
+      if (isDemoAllowed) {
+        const demo = localStorage.getItem('demo_user');
+        if (demo) {
+          set({ user: JSON.parse(demo), isDemoMode: true, loading: false, initialized: true });
+        } else {
+          set({ loading: false, initialized: true });
+        }
       } else {
         set({ loading: false, initialized: true });
       }
@@ -77,7 +82,7 @@ export const useStoreAuth = create<AuthState>()((set) => ({
 
   login: async (email: string, password: string) => {
     if (!hasSupabaseConfig) {
-      return { error: 'Supabase não configurado.' };
+      return { error: 'Não foi possível conectar ao serviço de autenticação.' };
     }
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -95,7 +100,7 @@ export const useStoreAuth = create<AuthState>()((set) => ({
 
   register: async (name: string, email: string, password: string) => {
     if (!hasSupabaseConfig) {
-      return { error: 'Supabase não configurado.' };
+      return { error: 'Não foi possível conectar ao serviço de autenticação.' };
     }
     try {
       const { error } = await supabase.auth.signUp({
@@ -119,7 +124,7 @@ export const useStoreAuth = create<AuthState>()((set) => ({
 
   resetPassword: async (email: string) => {
     if (!hasSupabaseConfig) {
-      return { error: 'Supabase não configurado.' };
+      return { error: 'Não foi possível conectar ao serviço de autenticação.' };
     }
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email);
@@ -133,10 +138,9 @@ export const useStoreAuth = create<AuthState>()((set) => ({
   },
 
   loginAsDemo: () => {
+    if (!isDemoAllowed) return;
     const demo = { id: 'demo-client', name: 'Cliente Demo', email: 'cliente@demo.com' };
-    if (!hasSupabaseConfig) {
-      localStorage.setItem('demo_user', JSON.stringify(demo));
-    }
+    localStorage.setItem('demo_user', JSON.stringify(demo));
     set({ user: demo, isDemoMode: true });
   },
 

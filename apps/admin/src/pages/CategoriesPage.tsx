@@ -17,7 +17,7 @@ const emptyForm: CategoryForm = {
   name: '', slug: '', icon_key: 'pill', display_order: 0, active: true,
 };
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
 
 export default function CategoriesPage() {
   const { data: categories, isLoading } = useCategories();

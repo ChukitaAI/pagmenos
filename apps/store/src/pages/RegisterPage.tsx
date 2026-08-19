@@ -4,7 +4,8 @@ import { useStoreAuth } from '@/stores/auth';
 import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
+const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -25,8 +26,12 @@ export default function RegisterPage() {
     if (password.length < 6) { toast.error('A senha deve ter pelo menos 6 caracteres.'); return; }
 
     if (!hasSupabaseConfig) {
-      toast.error('Cadastro disponível apenas quando o Supabase estiver configurado. Use o Modo Demo no Login.');
-      navigate('/login');
+      if (isDemoAllowed) {
+        toast.error('Cadastro indisponível no Modo Demo. Use a opção "Entrar como Cliente Demo" no Login.');
+        navigate('/login');
+      } else {
+        toast.error('Não foi possível conectar ao serviço de autenticação.');
+      }
       return;
     }
 

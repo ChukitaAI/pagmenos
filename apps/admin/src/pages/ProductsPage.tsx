@@ -79,7 +79,7 @@ export default function ProductsPage() {
   const handlePriceChange = (v: string) => { setPriceInput(v); const cents = Math.round(parseFloat(v.replace(',', '.')) * 100); if (!isNaN(cents)) setForm((f) => ({ ...f, base_price_cents: cents })); };
   const generateSlug = (name: string) => name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
-  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
 
   const handleSave = async () => {
     if (!form.name || !form.category_id || form.base_price_cents <= 0) { toast.error('Preencha nome, categoria e preço.'); return; }

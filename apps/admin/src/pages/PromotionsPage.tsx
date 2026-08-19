@@ -10,7 +10,7 @@ const emptyForm: PromoForm = { name: '', promotion_type: 'fixed_price', fixed_pr
 
 export default function PromotionsPage() {
   const qc = useQueryClient();
-  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
 
   const { data: promotions, isLoading } = useQuery({ queryKey: ['admin-promotions'], queryFn: async () => {
     if (!hasSupabaseConfig) {

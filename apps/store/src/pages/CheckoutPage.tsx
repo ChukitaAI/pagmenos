@@ -47,7 +47,7 @@ export default function CheckoutPage() {
 
   const { user } = useStoreAuth();
 
-  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+  const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
 
   const handleFinalize = async () => {
     const whatsappNumber = settings?.whatsapp_number || '558899981853';

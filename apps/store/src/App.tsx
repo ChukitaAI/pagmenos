@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { useStoreAuth } from '@/stores/auth';
 import { useCartStore } from '@/stores/cart';
 
-const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY);
+const hasSupabaseConfig = Boolean(import.meta.env.VITE_SUPABASE_URL?.trim()) && Boolean(import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim());
 
 const HomePage = lazy(() => import('@/pages/HomePage'));
 const SearchPage = lazy(() => import('@/pages/SearchPage'));
