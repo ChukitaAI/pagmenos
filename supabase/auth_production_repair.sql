@@ -156,7 +156,7 @@ CREATE POLICY "Admin Delete Access" ON storage.objects FOR DELETE USING (bucket_
 -- 9. ADMIN PROMOTION
 DO $$
 DECLARE
-  v_admin_email text := 'Pagmenos@admin.com';
+  v_admin_email text := 'pagmenos@admin.com';
   v_user_id uuid;
 BEGIN
   SELECT id INTO v_user_id FROM auth.users WHERE lower(email) = lower(v_admin_email);
@@ -181,4 +181,4 @@ SELECT
 SELECT u.email, r.role 
 FROM auth.users u 
 LEFT JOIN public.user_roles r ON r.user_id = u.id 
-WHERE lower(u.email) = lower('Pagmenos@admin.com');
+WHERE lower(u.email) = lower('pagmenos@admin.com');

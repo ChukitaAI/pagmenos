@@ -1,7 +1,7 @@
 -- ==========================================
 -- Pagmenos Supabase Complete Setup SQL
 -- ==========================================
--- TEMPORARY ADMIN EMAIL: Pagmenos@admin.com
+-- TEMPORARY ADMIN EMAIL: pagmenos@admin.com
 -- Create this user manually in Supabase Auth before or after running this script.
 
 -- 1. EXTENSIONS
@@ -318,7 +318,7 @@ CREATE POLICY "Admin Delete Access" ON storage.objects FOR DELETE USING (bucket_
 -- 9. ADMIN ROLE PROMOTION
 DO $$
 DECLARE
-  v_admin_email text := 'Pagmenos@admin.com';
+  v_admin_email text := 'pagmenos@admin.com';
   v_user_id uuid;
 BEGIN
   SELECT id INTO v_user_id FROM auth.users WHERE lower(email) = lower(v_admin_email);
@@ -340,4 +340,4 @@ $$;
 -- 10. VERIFICATION
 SELECT count(*) as category_count FROM public.categories;
 SELECT count(*) as product_count FROM public.products;
-SELECT u.email, r.role FROM auth.users u LEFT JOIN public.user_roles r ON r.user_id = u.id WHERE lower(u.email) = lower('Pagmenos@admin.com');
+SELECT u.email, r.role FROM auth.users u LEFT JOIN public.user_roles r ON r.user_id = u.id WHERE lower(u.email) = lower('pagmenos@admin.com');
