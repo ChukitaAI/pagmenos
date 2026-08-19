@@ -10,7 +10,7 @@ const isDemoAllowed = !hasSupabaseConfig && import.meta.env.DEV;
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, login, loginAsDemo, resetPassword } = useStoreAuth();
+  const { user, role, login, loginAsDemo, resetPassword } = useStoreAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -20,7 +20,17 @@ export default function LoginPage() {
 
   // Already logged in — redirect
   if (user) {
-    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
+    // Wait for role to be resolved before redirecting
+    if (!isDemoAllowed && role === null) {
+      return (
+        <div className="flex justify-center items-center h-64">
+          <div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      );
+    }
+
+    const defaultRoute = role === 'admin' ? '/admin' : '/conta';
+    const fallbackFrom = (location.state as any)?.from?.pathname || defaultRoute;
     const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
     return <Navigate to={from} replace />;
   }
@@ -44,9 +54,8 @@ export default function LoginPage() {
     }
 
     toast.success('Login realizado com sucesso!');
-    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
-    const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
-    navigate(from, { replace: true });
+    // We don't navigate manually here because the component will re-render
+    // with 'user' set, and the redirect logic above will handle it.
   };
 
   const handleForgotPassword = async () => {
@@ -59,9 +68,8 @@ export default function LoginPage() {
   const handleDemoLogin = () => {
     loginAsDemo();
     toast.success('Logado como Cliente Demo');
-    const fallbackFrom = (location.state as any)?.from?.pathname || '/conta';
-    const from = (redirectParam && redirectParam.startsWith('/')) ? redirectParam : fallbackFrom;
-    navigate(from, { replace: true });
+    // We don't navigate manually here because the component will re-render
+    // with 'user' set, and the redirect logic above will handle it.
   };
 
   return (

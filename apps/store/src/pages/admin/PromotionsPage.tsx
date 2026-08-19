@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAdminProducts } from '@/hooks/adminQueries';
 import { supabase } from '@/lib/supabase';
 import { formatBRL } from '@pagmenos/utils';
 import { toast } from 'sonner';
@@ -33,11 +34,7 @@ export default function PromotionsPage() {
         products: [{ product_id: p.id }]
     }));
   }});
-  const { data: products } = useQuery({ queryKey: ['admin-products'], queryFn: async () => {
-    if (!hasSupabaseConfig) return (await import('@pagmenos/utils')).mockDB.get().products.filter(p => p.active);
-    const { data, error } = await supabase.from('products').select('id, name, price_cents').eq('active', true).order('name');
-    if (error) throw error; return data || [];
-  }});
+  const { data: products } = useAdminProducts();
 
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState<PromoForm>(emptyForm);

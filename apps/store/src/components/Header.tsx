@@ -7,7 +7,8 @@ import { useStoreAuth } from '@/stores/auth';
 export default function Header() {
   const { data: settings } = useStoreSettings();
   const itemCount = useCartStore((s) => s.items.reduce((sum, i) => sum + i.quantity, 0));
-  const { user } = useStoreAuth();
+  const { user, role } = useStoreAuth();
+  const accountRoute = role === 'admin' ? '/admin' : '/conta';
 
   return (
     <header className="sticky top-0 z-40 bg-surface border-b border-border shadow-sm">
@@ -28,7 +29,7 @@ export default function Header() {
 
           {/* Mobile Search/User Icons - Now just User since Search is below */}
           <div className="flex items-center gap-3 lg:hidden">
-            <Link to="/conta" className="p-2 -mr-2 text-text-secondary hover:text-text flex items-center gap-1.5 bg-background rounded-full px-3 border border-border">
+            <Link to={accountRoute} className="p-2 -mr-2 text-text-secondary hover:text-text flex items-center gap-1.5 bg-background rounded-full px-3 border border-border">
               <User size={16} />
               <span className="text-xs font-semibold">Conta</span>
             </Link>
@@ -49,7 +50,7 @@ export default function Header() {
 
         {/* Desktop Actions */}
         <div className="hidden lg:flex items-center gap-6">
-          <Link to="/conta" className="flex items-center gap-2 text-text-secondary hover:text-brand-600 transition-colors">
+          <Link to={accountRoute} className="flex items-center gap-2 text-text-secondary hover:text-brand-600 transition-colors">
             <User size={22} />
             <span className="text-sm font-medium truncate max-w-[150px]">{user?.name ? user.name.split(' ')[0] : (user?.email || 'Entrar')}</span>
           </Link>
